@@ -111,17 +111,10 @@ class Vehicle():
         self.COB = 0
         self.buoyancy = 0
         for vessel in self.vessels:
-            if self.water_height >= vessel['vessel'].height + vessel['location']: # vessel is fully under water
-                self.COB += vessel['vessel'].buoyancy * (vessel['vessel'].COB + vessel['location'])
-                self.buoyancy += vessel['vessel'].buoyancy
-            elif self.water_height < vessel['location']:
-                continue
-            else:
-                precent_covered = (self.water_height - vessel['location']) / vessel['vessel'].height
-                precent_buoyancy = vessel['vessel'].buoyancy * precent_covered
-                precent_COB = vessel['vessel'].COB * precent_covered
-                self.COB += precent_buoyancy * precent_COB
-                self.buoyancy += precent_buoyancy
+            temp_buoy, temp_COB = vessel['vessel'].bouyancy_at_point(self.water_height ,vessel['location'])
+            self.buoyancy += temp_buoy
+            self.COB += temp_COB
+                
         for wall in self.side_walls:
             temp_buoy, temp_COB = wall.buoyancy_at_point(self.water_height)
             self.COB += temp_buoy * temp_COB
@@ -188,8 +181,8 @@ class Vessel_Comparison():
 def split_csv_row(row):
     return [
         row[0],
-        *row[2:7],
-        row[7:]
+        *row[2:8],
+        row[8:]
     ]
 
 def import_data(location):
@@ -224,34 +217,6 @@ def import_data(location):
                 else:
                     water_height = row[1]
     return vessel, walls, varying_vessel, vehicle_height, water_height
-
-def multiple_vehicles(vessels, heights, vehicle_data):
-    vehicles = []
-    
-    for height in heights:
-        vehicles.append(Vehicle(vehicle_data['vehicle height'], vehicle_data['water height']))
-        for i, vessel in enumerate(vessels):
-            vehicles[-1].add_vessel(vessel, height[i])
-        vehicles[-1].recalc()
-        vehicles[-1].calc_net_force()
-        print(vehicles[-1].calc_COG_COB_distance())
-
-def vehicle_comparisons(vessels, heights, vehicle_data):
-
-    vessels, empty_buoyancy, full_buoyancy = split_vessels(vessels)
-    heights, buoyancy_height = split_heights(heights)
-
-    empty_vehicle = Vehicle(vehicle_data['vehicle height'], vehicle_data['water height'])
-    full_vehicle = Vehicle(vehicle_data['vehicle height'], vehicle_data['water height'])
-
-    for height, vessel in zip(heights, vessels):
-        empty_vehicle.add_vessel(vessel, height)
-        full_vehicle.add_vessel(vessel, height)
-    empty_vehicle.add_vessel(empty_buoyancy, buoyancy_height)
-    full_vehicle.add_vessel(full_buoyancy, buoyancy_height)
-    
-    comparison = Vessel_Comparison(empty_vehicle, full_vehicle)
-
 
 if __name__ == '__main__':
     vessels, walls, varying_vessels, vehicle_height, water_height = import_data('data.csv')
