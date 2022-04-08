@@ -7,9 +7,10 @@ Vessel COG and COB is measured from the bottom of the vessel up
 Water height is measured 
 """
 
+from cmath import pi, sqrt
 import csv
-from turtle import Turtle
-from unicodedata import name
+from math import acos
+from turtle import circle
 
 WATER_DENSITY = 1000 #KG/M^3
 GRAVITY = 9.81 #M/S^2
@@ -25,21 +26,47 @@ class Vessel():
     Defines any item adding contributing to the
     vehicles mass and buoyancy
     """
-    def __init__(self, name, mass, volume, COG, COB, height):
+    def __init__(self, name, weight, COG, COB, buoyancy, height, radius):
         self.name = name
-        self.weight = mass * GRAVITY
-        self.buoyancy = volume * WATER_DENSITY * GRAVITY
+        self.weight = weight
+        self.buoyancy = buoyancy
         self.COG = COG
         self.COB = COB
         self.height = height
+        self.radius = radius
+    
+    def buoyancy_at_point(self, position, vessel_location):
+        if position > vessel_location + self.height:
+            return self.buoyancy, self.COB
+        elif position < vessel_location:
+            return 0, 0
+        elif not self.radius:
+            precent = (position - vessel_location) / self.height
+        else: # circular
+            h = position - vessel_location
+            if h > self.radius: #more than halfway up the circle
+                h -= self.radius
+                precent = 1 - self.circle_area_precent(h)
+            else:
+                precent = self.circle_area_precent(h)
+        mod_buoyancy = self.buoyancy * precent
+        mod_COB = self.COB * precent
+        return mod_buoyancy, mod_COB
+                
+    def circle_area_precent(self, h):
+        total_area = pi * self.radius ** 2
+        sliver_area = self.radius ** 2 * acos((self.radius - h) / self.radius)
+        sliver_area -= (self.radius - h) * sqrt(2 * self.radius * h - h ** 2)
+        return sliver_area / total_area
+
 
 class SideWall(Vessel):
     """
     Sub-class of vessel, specifically for the vertical 
     walls of the vessel, to allow smoother waterline calcs
     """
-    def __init__(self, name, mass, volume, COG, COB, height):
-        super().__init__(name, mass, volume, COG, COB, height)
+    def __init__(self, name, weight, COG, COB, buoyancy, height, radius):
+        super().__init__(name, weight, COG, COB, buoyancy, height, radius)
 
     def buoyancy_at_point(self, position):
         if position > self.height:
@@ -197,12 +224,6 @@ def import_data(location):
                 else:
                     water_height = row[1]
     return vessel, walls, varying_vessel, vehicle_height, water_height
-
-def split_vessels(vessels):
-    return vessels[:-2], vessels[-2], vessels[-1]
-
-def split_heights(heights):
-    return heights[:-1], heights[-1]
 
 def multiple_vehicles(vessels, heights, vehicle_data):
     vehicles = []
