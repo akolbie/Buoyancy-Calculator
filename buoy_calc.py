@@ -28,16 +28,19 @@ class Vessel():
     """
     def __init__(self, name, weight, COG, COB, buoyancy, height, radius):
         self.name = name
-        self.weight = weight
-        self.buoyancy = buoyancy
-        self.COG = COG
-        self.COB = COB
-        self.height = height
-        self.radius = radius
+        self.weight = float(weight)
+        self.buoyancy = float(buoyancy)
+        self.COG = float(COG)
+        self.COB = float(COB)
+        self.height = float(height)
+        if radius == '':
+            self.radius = False
+        else:
+            self.radius = float(radius)
     
     def buoyancy_at_point(self, position, vessel_location):
         if position > vessel_location + self.height:
-            return self.buoyancy, self.COB
+            return self.buoyancy, self.COB + vessel_location
         elif position < vessel_location:
             return 0, 0
         elif not self.radius:
@@ -45,13 +48,13 @@ class Vessel():
         else: # circular
             h = position - vessel_location
             if h > self.radius: #more than halfway up the circle
-                h -= self.radius
+                h -= self.radius * 2
                 precent = 1 - self.circle_area_precent(h)
             else:
                 precent = self.circle_area_precent(h)
         mod_buoyancy = self.buoyancy * precent
         mod_COB = self.COB * precent
-        return mod_buoyancy, mod_COB
+        return mod_buoyancy, mod_COB + vessel_location
                 
     def circle_area_precent(self, h):
         total_area = pi * self.radius ** 2
@@ -68,9 +71,11 @@ class SideWall(Vessel):
     def __init__(self, name, weight, COG, COB, buoyancy, height, radius):
         super().__init__(name, weight, COG, COB, buoyancy, height, radius)
 
-    def buoyancy_at_point(self, position):
+    def buoyancy_at_point(self, water_height, position):
         if position > self.height:
             return self.buoyancy, self.COB
+        if position == 0:
+            return 0, 0
         precent = self.height / position
         mod_COB = self.COB * precent
         mod_buoyancy = self.buoyancy * precent
@@ -83,8 +88,8 @@ class Vehicle():
     some additional parameters to define a vehicle
     """
     def __init__(self, vehicle_height, water_height):
-        self.water_height = water_height
-        self.height = vehicle_height
+        self.water_height = float(water_height)
+        self.height = float(vehicle_height)
         self.weight = 0
         self.vessels = []
         self.side_walls = []
@@ -92,11 +97,11 @@ class Vehicle():
         self.net_force = 0
     
     def add_vessel(self, vessel, location):
-        self.vessels.append({'vessel' : vessel, 'location' : location})
+        self.vessels.append({'vessel' : vessel, 'location' : float(location)})
         self.weight += vessel.weight
     
     def add_side_wall(self, wall, location = 0):
-        self.side_walls.append({'wall' : wall, 'location' : location})
+        self.side_walls.append({'wall' : wall, 'location' : float(location)})
         self.weight += wall.weight
 
     def calc_center_of_gravity(self):
@@ -111,18 +116,18 @@ class Vehicle():
         self.COB = 0
         self.buoyancy = 0
         for vessel in self.vessels:
-            temp_buoy, temp_COB = vessel['vessel'].bouyancy_at_point(self.water_height ,vessel['location'])
+            temp_buoy, temp_COB = vessel['vessel'].buoyancy_at_point(self.water_height, vessel['location'])
             self.buoyancy += temp_buoy
-            self.COB += temp_COB
+            self.COB += temp_buoy * temp_COB
                 
         for wall in self.side_walls:
-            temp_buoy, temp_COB = wall.buoyancy_at_point(self.water_height)
+            temp_buoy, temp_COB = wall['wall'].buoyancy_at_point(self.water_height, self.water_height)
             self.COB += temp_buoy * temp_COB
             self.buoyancy += temp_buoy
         self.COB /= self.buoyancy
 
     def calc_net_force(self):
-        self.calc_net_force = self.buoyancy - self.weight
+        self.net_force = self.buoyancy - self.weight
 
     def recalc(self):
         self.calc_center_of_gravity()
@@ -197,10 +202,10 @@ def import_data(location):
     vehicle_height_flag = False
     with open(location, "r") as f:
         csv_reader = csv.reader(f)
-        for i, row in csv_reader:
+        for i, row in enumerate(csv_reader):
             if i == 0:
                 continue
-            elif row[0] == "0":
+            elif row[0] == "":
                 vessel_flag = False
                 continue
             elif vessel_flag:
@@ -218,8 +223,30 @@ def import_data(location):
                     water_height = row[1]
     return vessel, walls, varying_vessel, vehicle_height, water_height
 
+def build_vehicles(vessels, walls, varying_vessels,vehicle_height, water_height):
+    vehicles = []
+    for i in range(len(vessels[0][-1])):
+        vehicles.append(Vehicle(vehicle_height, water_height))
+        for vessel in vessels:
+            vehicles[-1].add_vessel(Vessel(*vessel[:len(vessel) - 1]), vessel[-1][i])
+        for wall in walls:
+            vehicles[-1].add_side_wall(SideWall(*wall[:len(wall) - 1]), wall[-1][i])
+        
+        vehicles[-1].recalc()
+        vehicles[-1].calc_net_force()
+    
+    return vehicles
+        
+
+
+
 if __name__ == '__main__':
     vessels, walls, varying_vessels, vehicle_height, water_height = import_data('data.csv')
+    vehicles = build_vehicles(vessels, walls, varying_vessels, vehicle_height, water_height)
+
+    for vehicle in vehicles:
+        print(vehicle.net_force)
+
 
     #multiple_vehicles(vessels, heights, vehicle_data)
     #vehicle_comparisons(vessels, heights, vehicle_data)
