@@ -311,10 +311,16 @@ def build_vehicles(vessels, walls, varying_vessels,vehicle_height, water_height,
     for i in range(len(vessels[0][-1])):
         vehicles.append(Vehicle(vehicle_height, water_height, weight_height, buoyancy_height, vehicle_area))
         for vessel in vessels:
+            if vessel[-1][i] == 'NA':
+                continue
             vehicles[-1].add_vessel(Vessel(*vessel[:len(vessel) - 1]), vessel[-1][i])
         for wall in walls:
+            if wall[-1][i] == 'NA':
+                continue
             vehicles[-1].add_side_wall(SideWall(*wall[:len(wall) - 1]), wall[-1][i])
         for vary_vessel in varying_vessels:
+            if vary_vessel[-1][i] == 'NA':
+                continue
             vehicles[-1].add_varying_vessel(VaryingVessel(*vary_vessel[:len(vary_vessel) - 1]), vary_vessel[-1][i])
         
         vehicles[-1].recalc()
@@ -329,16 +335,17 @@ if __name__ == '__main__':
 
     for vehicle in vehicles:
         vehicle.recalc()
-        vehicle.add_buoyancy(311)
+        #vehicle.add_buoyancy(311)
+        vehicle.add_buoyancy()
         water,buoy,COB = vehicle.calc_water_height()
         print("Full buoyancy engine, empty hopper")
-        print(f'Water height {water}, stability {COB - vehicle.COG}, net_force {vehicle.net_force} full submerged')
+        print(f'Water height {water}, stability {COB - vehicle.COG}, net_force {vehicle.net_force} fully submerged, vehicle weight {vehicle.weight / 9.81}')
         vehicle.varying_vessels[0]['varying_vessel'].switch_mode()
         vehicle.varying_vessels[1]['varying_vessel'].switch_mode()
         vehicle.recalc()
         water,buoy,COB = vehicle.calc_water_height()
         print("Empty buoyancy engine, full hopper")
-        print(f'Water height {water}, stability {COB - vehicle.COG}, net_force {vehicle.net_force} full submerged')
+        print(f'Water height {water}, stability {COB - vehicle.COG}, net_force {vehicle.net_force} fully submerged, vehicle weight {vehicle.weight / 9.81}')
 
 
 
