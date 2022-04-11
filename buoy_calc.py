@@ -47,7 +47,7 @@ class Vessel():
         else: # circular
             h = position - vessel_location
             if h > self.radius: #more than halfway up the circle
-                h -= self.radius * 2
+                h = 2 * self.radius - h
                 precent = 1 - self.circle_area_precent(h)
             else:
                 precent = self.circle_area_precent(h)
@@ -59,8 +59,7 @@ class Vessel():
         total_area = pi * self.radius ** 2
         sliver_area = self.radius ** 2 * acos((self.radius - h) / self.radius)
         sliver_area -= (self.radius - h) * sqrt(2 * self.radius * h - h ** 2)
-        return sliver_area / total_area
-
+        return sliver_area.real / total_area
 
 class SideWall(Vessel):
     """
@@ -75,11 +74,13 @@ class SideWall(Vessel):
             return self.buoyancy, self.COB
         if position == 0:
             return 0, 0
-        precent = self.height / position
+        precent = position / self.height
         mod_COB = self.COB * precent
         mod_buoyancy = self.buoyancy * precent
         return mod_buoyancy, mod_COB
-        
+
+class VaryingVessel(Vessel):
+    pass
 
 class Vehicle():
     """
@@ -138,24 +139,22 @@ class Vehicle():
         self.calc_center_of_buoyancy()
 
     def calc_water_height(self):
-        buoyancy = 0
-        waterline_found = False
-        self.vessels.sort(key = lambda x: x['location'])
-        for vessel in self.vessels:
-            if vessel['vessel'].buoyancy + buoyancy < self.weight:
-                buoyancy += vessel['vessel'].buoyancy
-            elif vessel['vessel'].buoyancy + buoyancy > self.weight:
-                left_weight = self.weight - buoyancy
-                precent = left_weight / vessel['vessel'].buoyancy
-                self.calced_water_level = vessel['location'] + vessel['vessel'].height * precent
-                waterline_found = True
-                break
-            else:
-                self.calced_water_level = vessel['location'] + vessel['vessel'].height 
-                waterline_found = True
-                break
-        if not waterline_found:
-            print('Add foam')
+        self.recalc()
+        int_height = round(self.height)
+        for height in range(int_height):
+            buoyancy = 0
+            COB = 0
+            for vessel in self.vessels:
+                temp_buoy, temp_COB = vessel['vessel'].buoyancy_at_point(height, vessel['location'])
+                buoyancy += temp_buoy
+                COB += temp_buoy * temp_COB
+            for wall in self.side_walls:
+                temp_buoy, temp_COB = wall['wall'].buoyancy_at_point(None, height)
+                buoyancy += temp_buoy
+                COB += temp_buoy * temp_COB
+            if buoyancy > self.weight:
+                return height, buoyancy, COB
+        return 6000, buoyancy, COB
     
     def add_buoyancy(self, amount = 0):
         if amount == 0:
@@ -275,26 +274,16 @@ def build_vehicles(vessels, walls, varying_vessels,vehicle_height, water_height,
     
     return vehicles
         
-
-
-
 if __name__ == '__main__':
     vessels, walls, varying_vessels, vehicle_height, water_height, weight_height, buoyancy_height, vehicle_area = import_data('data.csv')
+    #vessels, walls, varying_vessels, vehicle_height, water_height, weight_height, buoyancy_height, vehicle_area = import_data('Model Validation.csv')
     vehicles = build_vehicles(vessels, walls, varying_vessels, vehicle_height, water_height, weight_height, buoyancy_height, vehicle_area)
 
     for vehicle in vehicles:
-        print(vehicle.net_force)
-        vehicle.add_buoyancy(40)
         vehicle.recalc()
-        vehicle.calc_net_force()
-        print(vehicle.net_force)
-        vehicle.add_weight()
-        vehicle.recalc()
-        vehicle.calc_net_force()
-        print(vehicle.net_force)
+        vehicle.add_buoyancy(100)
+        print(vehicle.calc_water_height())
 
 
     #multiple_vehicles(vessels, heights, vehicle_data)
     #vehicle_comparisons(vessels, heights, vehicle_data)
-
-

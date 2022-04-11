@@ -1,0 +1,12 @@
+Module Name,Type,Weight (N),Center of Mass (mm),Center of Buoyancy (mm),Buoyancy (N),Height (mm),Radius (mm),
+Comm Housing,Module,10,100,100,15,200,100,1500
+Control Housing,Module,10,100,100,15,200,,1200
+Battery Box,Module,75,200,100,100,400,,700
+Frame Port,Wall,40,935,935,30,1870,,0
+Frame Starboard,Wall,40,935,935,30,1870,,0
+,,,,,,,,
+Vehicle Height,1870,,,,,,,
+Water Height,2000,,,,,,,
+Weight Height,500,,,,,,,
+Buoyancy Height,1500,,,,,,,
+Vehicle Area,630000,,,,,,,
