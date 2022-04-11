@@ -144,14 +144,14 @@ class Vehicle():
         for vessel in self.vessels:
             if vessel['vessel'].buoyancy + buoyancy < self.weight:
                 buoyancy += vessel['vessel'].buoyancy
-            elif vessel['vessel'].bouyancy + buoyancy > self.weight:
+            elif vessel['vessel'].buoyancy + buoyancy > self.weight:
                 left_weight = self.weight - buoyancy
                 precent = left_weight / vessel['vessel'].buoyancy
-                self.calced_water_height = vessel['location'] + vessel['vessel'].height * precent
+                self.calced_water_level = vessel['location'] + vessel['vessel'].height * precent
                 waterline_found = True
                 break
             else:
-                self.calced_water_height = vessel['location'] + vessel['vessel'].height 
+                self.calced_water_level = vessel['location'] + vessel['vessel'].height 
                 waterline_found = True
                 break
         if not waterline_found:
