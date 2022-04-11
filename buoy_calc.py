@@ -80,7 +80,30 @@ class SideWall(Vessel):
         return mod_buoyancy, mod_COB
 
 class VaryingVessel(Vessel):
-    pass
+    """
+    Sub-class of vessel, specifically for buoyancy engines or hopper weight
+    """
+    def __init__(self, name, weight, COG, COB, buoyancy, height, radius):
+        if "|" in weight:
+            if 'opper' in name:
+                self.buoyancy_engine = False
+                self.weight_empty = float(weight.split('|')[0])
+                self.weight_full = float(weight.split('|')[1])
+                super().__init__(name, self.weight_empty, COG, COB, buoyancy, height, radius)
+            else:
+                self.buoyancy_engine = True
+                self.weight_empty = float(weight.split('|')[0])
+                self.weight_full = float(weight.split('|')[1])
+                super().__init__(name, self.weight_full, COG, COB, buoyancy, height, radius)
+        else:
+            print("Error neither buoyancy or hopper variable")
+
+    def switch_mode(self):
+        if self.weight == self.weight_empty:
+            self.weight = self.weight_full
+        else:
+            self.weight = self.weight_empty
+    
 
 class Vehicle():
     """
@@ -93,6 +116,7 @@ class Vehicle():
         self.weight = 0
         self.vessels = []
         self.side_walls = []
+        self.varying_vessels = []
         self.buoyancy = 0
         self.net_force = 0
         self.weight_height = float(weight_height)
@@ -108,13 +132,24 @@ class Vehicle():
         self.side_walls.append({'wall' : wall, 'location' : float(location)})
         self.weight += wall.weight
         self.recalc()
+    
+    def add_varying_vessel(self, varying_vessel, location):
+        self.varying_vessels.append({'varying_vessel' : varying_vessel, 'location' : float(location)})
+        self.weight += varying_vessel.weight
+        self.recalc()
 
     def calc_center_of_gravity(self):
         self.COG = 0
+        self.weight = 0
         for vessel in self.vessels:
             self.COG += (vessel['vessel'].COG + vessel['location']) * vessel['vessel'].weight
+            self.weight += vessel['vessel'].weight
         for wall in self.side_walls:
             self.COG += (wall['wall'].COG + wall['location']) * wall['wall'].weight
+            self.weight += wall['wall'].weight
+        for varying in self.varying_vessels:
+            self.COG += (varying['varying_vessel'].COG + varying['location']) * varying['varying_vessel'].weight
+            self.weight += varying['varying_vessel'].weight
         self.COG /= self.weight
     
     def calc_center_of_buoyancy(self):
@@ -129,6 +164,12 @@ class Vehicle():
             temp_buoy, temp_COB = wall['wall'].buoyancy_at_point(self.water_height, self.water_height)
             self.COB += temp_buoy * temp_COB
             self.buoyancy += temp_buoy
+        
+        for varying in self.varying_vessels:
+            temp_buoy, temp_COB = varying['varying_vessel'].buoyancy_at_point(self.water_height, varying['location'])
+            self.COB += temp_buoy * temp_COB
+            self.buoyancy += temp_buoy
+        
         self.COB /= self.buoyancy
 
     def calc_net_force(self):
@@ -137,6 +178,7 @@ class Vehicle():
     def recalc(self):
         self.calc_center_of_gravity()
         self.calc_center_of_buoyancy()
+        self.calc_net_force()
 
     def calc_water_height(self):
         self.recalc()
@@ -152,9 +194,13 @@ class Vehicle():
                 temp_buoy, temp_COB = wall['wall'].buoyancy_at_point(None, height)
                 buoyancy += temp_buoy
                 COB += temp_buoy * temp_COB
+            for varying in self.varying_vessels:
+                temp_buoy, temp_COB = varying['varying_vessel'].buoyancy_at_point(height, varying['location'])
+                buoyancy += temp_buoy
+                COB += temp_buoy * temp_COB
             if buoyancy > self.weight:
-                return height, buoyancy, COB
-        return 6000, buoyancy, COB
+                return height, buoyancy, COB / buoyancy
+        return 6000, buoyancy, COB / buoyancy
     
     def add_buoyancy(self, amount = 0):
         if amount == 0:
@@ -268,6 +314,8 @@ def build_vehicles(vessels, walls, varying_vessels,vehicle_height, water_height,
             vehicles[-1].add_vessel(Vessel(*vessel[:len(vessel) - 1]), vessel[-1][i])
         for wall in walls:
             vehicles[-1].add_side_wall(SideWall(*wall[:len(wall) - 1]), wall[-1][i])
+        for vary_vessel in varying_vessels:
+            vehicles[-1].add_varying_vessel(VaryingVessel(*vary_vessel[:len(vary_vessel) - 1]), vary_vessel[-1][i])
         
         vehicles[-1].recalc()
         vehicles[-1].calc_net_force()
@@ -281,8 +329,17 @@ if __name__ == '__main__':
 
     for vehicle in vehicles:
         vehicle.recalc()
-        vehicle.add_buoyancy(100)
-        print(vehicle.calc_water_height())
+        vehicle.add_buoyancy(311)
+        water,buoy,COB = vehicle.calc_water_height()
+        print("Full buoyancy engine, empty hopper")
+        print(f'Water height {water}, stability {COB - vehicle.COG}, net_force {vehicle.net_force} full submerged')
+        vehicle.varying_vessels[0]['varying_vessel'].switch_mode()
+        vehicle.varying_vessels[1]['varying_vessel'].switch_mode()
+        vehicle.recalc()
+        water,buoy,COB = vehicle.calc_water_height()
+        print("Empty buoyancy engine, full hopper")
+        print(f'Water height {water}, stability {COB - vehicle.COG}, net_force {vehicle.net_force} full submerged')
+
 
 
     #multiple_vehicles(vessels, heights, vehicle_data)
