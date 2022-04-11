@@ -10,7 +10,6 @@ Water height is measured
 from cmath import pi, sqrt
 import csv
 from math import acos
-from turtle import circle
 
 WATER_DENSITY = 1000 #KG/M^3
 GRAVITY = 9.81 #M/S^2
@@ -87,7 +86,7 @@ class Vehicle():
     A class which is the combination of vessels and
     some additional parameters to define a vehicle
     """
-    def __init__(self, vehicle_height, water_height):
+    def __init__(self, vehicle_height, water_height, weight_height, buoyancy_height, vehicle_area):
         self.water_height = float(water_height)
         self.height = float(vehicle_height)
         self.weight = 0
@@ -95,14 +94,19 @@ class Vehicle():
         self.side_walls = []
         self.buoyancy = 0
         self.net_force = 0
+        self.weight_height = float(weight_height)
+        self.buoyancy_height = float(buoyancy_height)
+        self.vehicle_area = float(vehicle_area)
     
     def add_vessel(self, vessel, location):
         self.vessels.append({'vessel' : vessel, 'location' : float(location)})
         self.weight += vessel.weight
+        self.recalc()
     
     def add_side_wall(self, wall, location = 0):
         self.side_walls.append({'wall' : wall, 'location' : float(location)})
         self.weight += wall.weight
+        self.recalc()
 
     def calc_center_of_gravity(self):
         self.COG = 0
@@ -152,9 +156,37 @@ class Vehicle():
                 break
         if not waterline_found:
             print('Add foam')
+    
+    def add_buoyancy(self, amount = 0):
+        if amount == 0:
+            amount = -self.net_force
+            if amount < 0:
+                return        
+        volume = amount / (9.81 * FOAM_IN_WATER_BUOYANCY) #m^3
+        weight = volume * FOAM_DENSITY * 9.81
+        height = volume * 1000 ** 3 / self.vehicle_area
+        buoyancy = volume * WATER_DENSITY * 9.81
+        self.add_vessel(
+            Vessel('foam', weight, height / 2, height / 2, buoyancy, height, ""), 
+            self.buoyancy_height)
+
+    def add_weight(self, amount = 0):
+        if amount == 0:
+            amount = self.net_force
+            if amount < 0:
+                return
+        volume = amount / (9.81 * WEIGHT_IN_WATER_WEIGHT)
+        weight = volume * WEIGHT_DENSITY * 9.81
+        buoyancy = volume * WATER_DENSITY * 9.81
+        height = volume * 1000 ** 3 / self.vehicle_area
+        self.add_vessel(
+            Vessel('weight', weight, height / 2, height / 2, buoyancy, height, ""),
+            self.weight_height
+        )
+
 
     def calc_COG_COB_distance(self):
-        return self.COB - self.COG       
+        return self.COB - self.COG
 
 class Vessel_Comparison():
     """
@@ -201,7 +233,11 @@ def import_data(location):
     vessel_flag = True
     vehicle_height_flag = False
     with open(location, "r") as f:
-        csv_reader = csv.reader(f)
+        csv_reader_temp = csv.reader(f)
+        csv_reader = []
+        for row in csv_reader_temp:
+            csv_reader.append(row)
+
         for i, row in enumerate(csv_reader):
             if i == 0:
                 continue
@@ -216,17 +252,19 @@ def import_data(location):
                 else:
                     varying_vessel.append(split_csv_row(row))
             else:
-                if not vehicle_height_flag:
-                    vehicle_height = row[1]
-                    vehicle_height_flag = True
-                else:
-                    water_height = row[1]
-    return vessel, walls, varying_vessel, vehicle_height, water_height
+                vehicle_height = csv_reader[i][1]
+                water_height = csv_reader[i + 1][1]
+                weight_height = csv_reader[i + 2][1]
+                buoyancy_height = csv_reader[i + 3][1]
+                vehicle_area = csv_reader[i + 4][1]
+                break
 
-def build_vehicles(vessels, walls, varying_vessels,vehicle_height, water_height):
+    return vessel, walls, varying_vessel, vehicle_height, water_height, weight_height, buoyancy_height, vehicle_area
+
+def build_vehicles(vessels, walls, varying_vessels,vehicle_height, water_height, weight_height, buoyancy_height, vehicle_area):
     vehicles = []
     for i in range(len(vessels[0][-1])):
-        vehicles.append(Vehicle(vehicle_height, water_height))
+        vehicles.append(Vehicle(vehicle_height, water_height, weight_height, buoyancy_height, vehicle_area))
         for vessel in vessels:
             vehicles[-1].add_vessel(Vessel(*vessel[:len(vessel) - 1]), vessel[-1][i])
         for wall in walls:
@@ -241,10 +279,18 @@ def build_vehicles(vessels, walls, varying_vessels,vehicle_height, water_height)
 
 
 if __name__ == '__main__':
-    vessels, walls, varying_vessels, vehicle_height, water_height = import_data('data.csv')
-    vehicles = build_vehicles(vessels, walls, varying_vessels, vehicle_height, water_height)
+    vessels, walls, varying_vessels, vehicle_height, water_height, weight_height, buoyancy_height, vehicle_area = import_data('data.csv')
+    vehicles = build_vehicles(vessels, walls, varying_vessels, vehicle_height, water_height, weight_height, buoyancy_height, vehicle_area)
 
     for vehicle in vehicles:
+        print(vehicle.net_force)
+        vehicle.add_buoyancy(40)
+        vehicle.recalc()
+        vehicle.calc_net_force()
+        print(vehicle.net_force)
+        vehicle.add_weight()
+        vehicle.recalc()
+        vehicle.calc_net_force()
         print(vehicle.net_force)
 
 
