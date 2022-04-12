@@ -110,7 +110,8 @@ class Vehicle():
     A class which is the combination of vessels and
     some additional parameters to define a vehicle
     """
-    def __init__(self, vehicle_height, water_height, weight_height, buoyancy_height, vehicle_area):
+    def __init__(self, name, vehicle_height, water_height, weight_height, buoyancy_height, vehicle_area):
+        self.name = name
         self.water_height = float(water_height)
         self.height = float(vehicle_height)
         self.weight = 0
@@ -233,12 +234,39 @@ class Vehicle():
     def calc_COG_COB_distance(self):
         return self.COB - self.COG
 
+class Vessel_Comparison():
+    """
+    A class for comparing two identical vehicles with 
+    a full vs empty buoyancy engine
+    """
+    def __init__(self, empty_vehicle, full_vehicle):
+        self.empty_vehicle = empty_vehicle
+        self.full_vehicle = full_vehicle
+    
+    def calc_foam_or_weight(self):
+        difference = self.full_vehicle.net_force - self.empty_vehicle.net_force
+
+        if difference > 0: # add weight
+            amount = difference / WEIGHT_IN_WATER_WEIGHT
+            self.empty_vehicle.add_vessel(Vessel(WEIGHT_DENSITY * abs(amount), amount, 1, 1, 2), 0)
+            self.full_vehicle.add_vessel(Vessel(WEIGHT_DENSITY * abs(amount), amount, 1, 1, 2), 0)
+        elif difference < 0: # add foam
+            amount = difference / FOAM_IN_WATER_BUOYANCY
+            self.empty_vehicle.add_vessel(Vessel(FOAM_DENSITY * abs(amount), amount,1, 1, 2), self.empty_vehicle.height)
+            self.full_vehicle.add_vessel(Vessel(FOAM_DENSITY * abs(amount), amount,1, 1, 2), self.full_vehicle.height)
+        else:
+            amount = 0
+        
+        self.empty_vehicle.recalc()
+        self.full_vehicle.recalc()
+        return amount, self.empty_vehicle.vessels[-1].weight # maybe just pass the vessel?
 
 def split_csv_row(row):
     return [
         row[0],
         *row[2:8],
-        row[8:]]
+        row[8:]
+    ]
 
 def import_data(location):
     """
@@ -258,7 +286,7 @@ def import_data(location):
 
         for i, row in enumerate(csv_reader):
             if i == 0:
-                continue
+                names  = [*row[8:]]
             elif row[0] == "":
                 vessel_flag = False
                 continue
@@ -277,12 +305,16 @@ def import_data(location):
                 vehicle_area = csv_reader[i + 4][1]
                 break
 
-    return vessel, walls, varying_vessel, vehicle_height, water_height, weight_height, buoyancy_height, vehicle_area
+    return names, vessel, walls, varying_vessel, vehicle_height, water_height, weight_height, buoyancy_height, vehicle_area
 
-def build_vehicles(vessels, walls, varying_vessels,vehicle_height, water_height, weight_height, buoyancy_height, vehicle_area):
+def output_data(location, vehicles):
+    for vehicle in vehicles:
+
+
+def build_vehicles(names, vessels, walls, varying_vessels,vehicle_height, water_height, weight_height, buoyancy_height, vehicle_area):
     vehicles = []
     for i in range(len(vessels[0][-1])):
-        vehicles.append(Vehicle(vehicle_height, water_height, weight_height, buoyancy_height, vehicle_area))
+        vehicles.append(Vehicle(names[i],vehicle_height, water_height, weight_height, buoyancy_height, vehicle_area))
         for vessel in vessels:
             if vessel[-1][i] == 'NA':
                 continue
@@ -302,22 +334,22 @@ def build_vehicles(vessels, walls, varying_vessels,vehicle_height, water_height,
     return vehicles
         
 if __name__ == '__main__':
-    vessels, walls, varying_vessels, vehicle_height, water_height, weight_height, buoyancy_height, vehicle_area = import_data('data.csv')
+    names, vessels, walls, varying_vessels, vehicle_height, water_height, weight_height, buoyancy_height, vehicle_area = import_data('data.csv')
     #vessels, walls, varying_vessels, vehicle_height, water_height, weight_height, buoyancy_height, vehicle_area = import_data('Model Validation.csv')
-    vehicles = build_vehicles(vessels, walls, varying_vessels, vehicle_height, water_height, weight_height, buoyancy_height, vehicle_area)
+    vehicles = build_vehicles(names, vessels, walls, varying_vessels, vehicle_height, water_height, weight_height, buoyancy_height, vehicle_area)
 
     for vehicle in vehicles:
         vehicle.recalc()
         #vehicle.add_buoyancy(311)
         vehicle.add_buoyancy()
         water,buoy,COB = vehicle.calc_water_height()
-        print("Full buoyancy engine, empty hopper")
+        print(f"{vehicle.name} - Full buoyancy engine, empty hopper")
         print(f'Water height {water}, stability {COB - vehicle.COG}, net_force {vehicle.net_force} fully submerged, vehicle weight {vehicle.weight / 9.81}')
         vehicle.varying_vessels[0]['varying_vessel'].switch_mode()
         vehicle.varying_vessels[1]['varying_vessel'].switch_mode()
         vehicle.recalc()
         water,buoy,COB = vehicle.calc_water_height()
-        print("Empty buoyancy engine, full hopper")
+        print(f"{vehicle.name} - Empty buoyancy engine, full hopper")
         print(f'Water height {water}, stability {COB - vehicle.COG}, net_force {vehicle.net_force} fully submerged, vehicle weight {vehicle.weight / 9.81}')
 
 
