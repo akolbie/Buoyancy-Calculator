@@ -213,7 +213,7 @@ class Vehicle():
         height = volume * 1000 ** 3 / self.vehicle_area
         buoyancy = volume * WATER_DENSITY * 9.81
         self.add_vessel(
-            Vessel('foam', weight, height / 2, height / 2, buoyancy, height, ""), 
+            Vessel('foam_added', weight, height / 2, height / 2, buoyancy, height, ""), 
             self.buoyancy_height)
 
     def add_weight(self, amount = 0):
@@ -308,8 +308,50 @@ def import_data(location):
     return names, vessel, walls, varying_vessel, vehicle_height, water_height, weight_height, buoyancy_height, vehicle_area
 
 def output_data(location, vehicles):
+    output = []
     for vehicle in vehicles:
-
+        vehicle.recalc()
+        vehicle.add_buoyancy()
+        vehicle.add_buoyancy(10)
+        vehicle.recalc()
+        water, buoy, COB = vehicle.calc_water_height()
+        if len(vehicle.varying_vessels) == 0: #no hopper or buoyancy engine
+            output.append([vehicle.name])
+            foam_weight = 0
+            for vessel in vehicle.vessels:
+                if vessel['vessel'].name == 'foam_added':
+                    foam_weight += vessel['vessel'].weight
+            output.append(['Buoyancy Added (mm^3)', foam_weight / (9.81 * FOAM_DENSITY) * 1000 ** 3])
+            output.append(['Buoyancy Height (mm)', (foam_weight / (9.81 * FOAM_DENSITY) * 1000 ** 3) / vehicle.vehicle_area])
+            output.append(['Out of water height', vehicle.height - water])
+            output.append(['Stability', COB - vehicle.COG])
+            output.append(['Vehicle Weight', vehicle.weight])
+            output.append([''])
+        else: # hopper and or buoyancy engine
+            output.append([vehicle.name])
+            output.append(['Pre nodules'])
+            for i in range(2):
+                vehicle.recalc()
+                foam_weight = 0
+                for vessel in vehicle.vessels:
+                    if vessel['vessel'].name == 'foam_added':
+                        foam_weight += vessel['vessel'].weight
+                output.append(['Buoyancy Added (mm^3)', foam_weight / (9.81 * FOAM_DENSITY) * 1000 ** 3])
+                output.append(['Buoyancy Height (mm)', (foam_weight / (9.81 * FOAM_DENSITY) * 1000 ** 3) / vehicle.vehicle_area])
+                output.append(['Out of water height', vehicle.height - water])
+                output.append(['Stability', COB - vehicle.COG])
+                output.append(['Vehicle Weight', vehicle.weight])
+                vehicle.varying_vessels[0]['varying_vessel'].switch_mode()
+                vehicle.varying_vessels[1]['varying_vessel'].switch_mode()
+                if i == 0:
+                    output.append(['Post Nodules'])
+                else:
+                    output.append([''])
+    
+    with open(location, "w+", newline="") as f:
+        csv_writer = csv.writer(f)
+        for row in output:
+            csv_writer.writerow(row)
 
 def build_vehicles(names, vessels, walls, varying_vessels,vehicle_height, water_height, weight_height, buoyancy_height, vehicle_area):
     vehicles = []
@@ -338,20 +380,20 @@ if __name__ == '__main__':
     #vessels, walls, varying_vessels, vehicle_height, water_height, weight_height, buoyancy_height, vehicle_area = import_data('Model Validation.csv')
     vehicles = build_vehicles(names, vessels, walls, varying_vessels, vehicle_height, water_height, weight_height, buoyancy_height, vehicle_area)
 
-    for vehicle in vehicles:
-        vehicle.recalc()
-        #vehicle.add_buoyancy(311)
-        vehicle.add_buoyancy()
-        water,buoy,COB = vehicle.calc_water_height()
-        print(f"{vehicle.name} - Full buoyancy engine, empty hopper")
-        print(f'Water height {water}, stability {COB - vehicle.COG}, net_force {vehicle.net_force} fully submerged, vehicle weight {vehicle.weight / 9.81}')
-        vehicle.varying_vessels[0]['varying_vessel'].switch_mode()
-        vehicle.varying_vessels[1]['varying_vessel'].switch_mode()
-        vehicle.recalc()
-        water,buoy,COB = vehicle.calc_water_height()
-        print(f"{vehicle.name} - Empty buoyancy engine, full hopper")
-        print(f'Water height {water}, stability {COB - vehicle.COG}, net_force {vehicle.net_force} fully submerged, vehicle weight {vehicle.weight / 9.81}')
-
+    # for vehicle in vehicles:
+    #     vehicle.recalc()
+    #     #vehicle.add_buoyancy(311)
+    #     vehicle.add_buoyancy()
+    #     water,buoy,COB = vehicle.calc_water_height()
+    #     print(f"{vehicle.name} - Full buoyancy engine, empty hopper")
+    #     print(f'Water height {water}, stability {COB - vehicle.COG}, net_force {vehicle.net_force} fully submerged, vehicle weight {vehicle.weight / 9.81}')
+    #     vehicle.varying_vessels[0]['varying_vessel'].switch_mode()
+    #     vehicle.varying_vessels[1]['varying_vessel'].switch_mode()
+    #     vehicle.recalc()
+    #     water,buoy,COB = vehicle.calc_water_height()
+    #     print(f"{vehicle.name} - Empty buoyancy engine, full hopper")
+    #     print(f'Water height {water}, stability {COB - vehicle.COG}, net_force {vehicle.net_force} fully submerged, vehicle weight {vehicle.weight / 9.81}')
+    output_data('output.csv', vehicles)
 
 
     #multiple_vehicles(vessels, heights, vehicle_data)

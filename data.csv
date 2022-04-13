@@ -1,4 +1,4 @@
-Module Name,Type,Weight (N),Center of Mass (mm),Center of Buoyancy (mm),Buoyancy (N),Height (mm),Radius (mm),,
+Module Name,Type,Weight (N),Center of Mass (mm),Center of Buoyancy (mm),Buoyancy (N),Height (mm),Radius (mm),Buoy above Bat,Bat above Buoy
 Comm Housing,Module,66.5205309,104.5135,107.95,115.9417861,215.9,114.3,1596.65,1596.65
 Control Housing,Module,61.9248402,103.4132,107.95,116.0435775,215.9,114.3,996.4638,996.4638
 Buoyancy Vessel Empty,Varying,258.632802|549.925056,112.4137,123.9172,96.77052889,255.4,,655,1287.7
