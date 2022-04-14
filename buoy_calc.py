@@ -94,7 +94,7 @@ class VaryingVessel(Vessel):
                 self.buoyancy_engine = True
                 self.weight_empty = float(weight.split('|')[0])
                 self.weight_full = float(weight.split('|')[1])
-                super().__init__(name, self.weight_full, COG, COB, buoyancy, height, radius)
+                super().__init__(name, self.weight_empty, COG, COB, buoyancy, height, radius)
         else:
             print("Error neither buoyancy or hopper variable")
 
@@ -135,7 +135,10 @@ class Vehicle():
         self.recalc()
     
     def add_varying_vessel(self, varying_vessel, location):
-        self.varying_vessels.append({'varying_vessel' : varying_vessel, 'location' : float(location)})
+        if varying_vessel.buoyancy_engine:
+            self.varying_vessels.insert(0, {'varying_vessel' : varying_vessel, 'location' : float(location)})
+        else:
+            self.varying_vessels.append({'varying_vessel' : varying_vessel, 'location' : float(location)})
         self.weight += varying_vessel.weight
         self.recalc()
 
@@ -153,21 +156,23 @@ class Vehicle():
             self.weight += varying['varying_vessel'].weight
         self.COG /= self.weight
     
-    def calc_center_of_buoyancy(self):
+    def calc_center_of_buoyancy(self, water_height = None):
         self.COB = 0
         self.buoyancy = 0
+        if water_height == None:
+            water_height = self.water_height 
         for vessel in self.vessels:
-            temp_buoy, temp_COB = vessel['vessel'].buoyancy_at_point(self.water_height, vessel['location'])
+            temp_buoy, temp_COB = vessel['vessel'].buoyancy_at_point(water_height, vessel['location'])
             self.buoyancy += temp_buoy
             self.COB += temp_buoy * temp_COB
                 
         for wall in self.side_walls:
-            temp_buoy, temp_COB = wall['wall'].buoyancy_at_point(self.water_height, self.water_height)
+            temp_buoy, temp_COB = wall['wall'].buoyancy_at_point(water_height, water_height)
             self.COB += temp_buoy * temp_COB
             self.buoyancy += temp_buoy
         
         for varying in self.varying_vessels:
-            temp_buoy, temp_COB = varying['varying_vessel'].buoyancy_at_point(self.water_height, varying['location'])
+            temp_buoy, temp_COB = varying['varying_vessel'].buoyancy_at_point(water_height, varying['location'])
             self.COB += temp_buoy * temp_COB
             self.buoyancy += temp_buoy
         
@@ -176,9 +181,9 @@ class Vehicle():
     def calc_net_force(self):
         self.net_force = self.buoyancy - self.weight
 
-    def recalc(self):
+    def recalc(self, water_height = None):
         self.calc_center_of_gravity()
-        self.calc_center_of_buoyancy()
+        self.calc_center_of_buoyancy(water_height)
         self.calc_net_force()
 
     def calc_water_height(self):
@@ -206,8 +211,9 @@ class Vehicle():
     def add_buoyancy(self, amount = 0):
         if amount == 0:
             amount = -self.net_force
-            if amount < 0:
-                return        
+        if amount < 0:
+            self.add_weight(-amount)
+            return
         volume = amount / (9.81 * FOAM_IN_WATER_BUOYANCY) #m^3
         weight = volume * FOAM_DENSITY * 9.81
         height = volume * 1000 ** 3 / self.vehicle_area
@@ -220,19 +226,45 @@ class Vehicle():
         if amount == 0:
             amount = self.net_force
             if amount < 0:
+                self.add_buoyancy(-amount)
                 return
         volume = amount / (9.81 * WEIGHT_IN_WATER_WEIGHT)
         weight = volume * WEIGHT_DENSITY * 9.81
         buoyancy = volume * WATER_DENSITY * 9.81
         height = volume * 1000 ** 3 / self.vehicle_area
         self.add_vessel(
-            Vessel('weight', weight, height / 2, height / 2, buoyancy, height, ""),
+            Vessel('weight_added', weight, height / 2, height / 2, buoyancy, height, ""),
             self.weight_height
         )
 
 
     def calc_COG_COB_distance(self):
         return self.COB - self.COG
+
+    def calc_foam_for_varying(self):
+        if len(self.varying_vessels) == 1:
+            self.recalc()
+            return self.net_force
+        else:
+            #find net force down
+            self.varying_vessels[0]['varying_vessel'].switch_mode() #fill buoyancy engine
+            self.recalc()
+            force_down = self.net_force
+
+            #find net force up
+            self.varying_vessels[0]['varying_vessel'].switch_mode() #empty buoyancy engine
+            self.varying_vessels[1]['varying_vessel'].switch_mode() #fill hopper
+            self.recalc()
+            force_up = self.net_force
+
+            bouyancy_force = - force_down - force_up
+            bouyancy_force /= 2
+
+            self.varying_vessels[1]['varying_vessel'].switch_mode() #return to initial state
+
+            return bouyancy_force
+
+
 
 class Vessel_Comparison():
     """
@@ -311,42 +343,62 @@ def output_data(location, vehicles):
     output = []
     for vehicle in vehicles:
         vehicle.recalc()
-        vehicle.add_buoyancy()
-        vehicle.add_buoyancy(10)
-        vehicle.recalc()
-        water, buoy, COB = vehicle.calc_water_height()
         if len(vehicle.varying_vessels) == 0: #no hopper or buoyancy engine
+            vehicle.add_weight(1000)
+            vehicle.add_buoyancy()
+            vehicle.add_buoyancy(10)
+            vehicle.recalc()
+            water, buoy, COB = vehicle.calc_water_height()
             output.append([vehicle.name])
             foam_weight = 0
+            weight_weight = 0
             for vessel in vehicle.vessels:
                 if vessel['vessel'].name == 'foam_added':
                     foam_weight += vessel['vessel'].weight
+                elif vessel['vessel'].name == 'weight_added':
+                    weight_weight += vessel['vessel'].weight
             output.append(['Buoyancy Added (mm^3)', foam_weight / (9.81 * FOAM_DENSITY) * 1000 ** 3])
+            output.append(["Weight Added (mm^3)", weight_weight / (9.81 * WEIGHT_DENSITY) * 1000 ** 3])
             output.append(['Buoyancy Height (mm)', (foam_weight / (9.81 * FOAM_DENSITY) * 1000 ** 3) / vehicle.vehicle_area])
             output.append(['Out of water height', vehicle.height - water])
             output.append(['Stability', COB - vehicle.COG])
-            output.append(['Vehicle Weight', vehicle.weight])
+            output.append(['Vehicle Weight (kg)', vehicle.weight / 9.81])
+            output.append(['Net Force', vehicle.net_force])
             output.append([''])
         else: # hopper and or buoyancy engine
-            output.append([vehicle.name])
-            output.append(['Pre nodules'])
-            for i in range(2):
+            vehicle.add_buoyancy(vehicle.calc_foam_for_varying())
+            vehicle.recalc()
+            water, buoy, COB = vehicle.calc_water_height()
+            output.append(['',vehicle.name])
+            output.append(['Pre launch checks'])
+            for i in range(3):
                 vehicle.recalc()
                 foam_weight = 0
+                weight_weight = 0
                 for vessel in vehicle.vessels:
                     if vessel['vessel'].name == 'foam_added':
                         foam_weight += vessel['vessel'].weight
+                    elif vessel['vessel'].name == 'weight_added':
+                        weight_weight += vessel['vessel'].weight
                 output.append(['Buoyancy Added (mm^3)', foam_weight / (9.81 * FOAM_DENSITY) * 1000 ** 3])
+                output.append(["Weight Added (mm^3)", weight_weight / (9.81 * WEIGHT_DENSITY) * 1000 ** 3])
                 output.append(['Buoyancy Height (mm)', (foam_weight / (9.81 * FOAM_DENSITY) * 1000 ** 3) / vehicle.vehicle_area])
                 output.append(['Out of water height', vehicle.height - water])
                 output.append(['Stability', COB - vehicle.COG])
-                output.append(['Vehicle Weight', vehicle.weight])
-                vehicle.varying_vessels[0]['varying_vessel'].switch_mode()
-                vehicle.varying_vessels[1]['varying_vessel'].switch_mode()
+                output.append(['Vehicle Weight (kg)', vehicle.weight / 9.81])
+                output.append(['Net Force', vehicle.net_force])
+                output.append([''])
                 if i == 0:
+                    output.append(['Launch'])
+                    vehicle.varying_vessels[0]['varying_vessel'].switch_mode()
+                elif i == 1:
                     output.append(['Post Nodules'])
+                    vehicle.varying_vessels[0]['varying_vessel'].switch_mode()
+                    if len(vehicle.varying_vessels) != 1:
+                        vehicle.varying_vessels[1]['varying_vessel'].switch_mode()
                 else:
                     output.append([''])
+                water, buoy, COB = vehicle.calc_water_height()
     
     with open(location, "w+", newline="") as f:
         csv_writer = csv.writer(f)

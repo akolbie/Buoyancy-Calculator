@@ -1,28 +1,125 @@
-Buoy above Bat
-Pre nodules
-Buoyancy Added (mm^3),46006232.634951636
-Buoyancy Height (mm),73.02576608722482
+Bare Bones
+Buoyancy Added (mm^3),105862672.23739815
+Weight Added (mm^3),15682584.489923941
+Buoyancy Height (mm),168.03598767840975
 Out of water height,26.0
-Stability,142.06933753658495
-Vehicle Weight,3267.5943980288757
-Post Nodules
-Buoyancy Added (mm^3),46006232.634951636
-Buoyancy Height (mm),73.02576608722482
-Out of water height,26.0
-Stability,160.18923702700522
-Vehicle Weight,3221.552144038876
+Stability,425.51928558134216
+Vehicle Weight (kg),404.05586324821917
+Net Force,10.0
 ""
-Bat above Buoy
-Pre nodules
-Buoyancy Added (mm^3),46006232.634951636
-Buoyancy Height (mm),73.02576608722482
-Out of water height,26.0
-Stability,34.97691139164829
-Vehicle Weight,3267.5943980288757
+,Bare Bones + Buoyancy Engine
+Pre launch checks
+Buoyancy Added (mm^3),68012514.69922923
+Weight Added (mm^3),0.0
+Buoyancy Height (mm),107.95637253845909
+Out of water height,298.0
+Stability,-98.50517284338002
+Vehicle Weight (kg),290.768634202797
+Net Force,950.0967433400006
+""
+Launch
+Buoyancy Added (mm^3),68012514.69922923
+Weight Added (mm^3),0.0
+Buoyancy Height (mm),107.95637253845909
+Out of water height,252.0
+Stability,-8.827743968441155
+Vehicle Weight (kg),321.20275420279694
+Net Force,651.5380261400005
+""
 Post Nodules
-Buoyancy Added (mm^3),46006232.634951636
-Buoyancy Height (mm),73.02576608722482
-Out of water height,26.0
-Stability,111.69843181336898
-Vehicle Weight,3221.552144038876
+Buoyancy Added (mm^3),68012514.69922923
+Weight Added (mm^3),0.0
+Buoyancy Height (mm),107.95637253845909
+Out of water height,298.0
+Stability,-98.50517284338002
+Vehicle Weight (kg),290.768634202797
+Net Force,950.0967433400006
+""
+""
+,+ Vision
+Pre launch checks
+Buoyancy Added (mm^3),68012514.69922923
+Weight Added (mm^3),0.0
+Buoyancy Height (mm),107.95637253845909
+Out of water height,298.0
+Stability,-98.50517284338002
+Vehicle Weight (kg),290.768634202797
+Net Force,950.0967433400006
+""
+Launch
+Buoyancy Added (mm^3),68012514.69922923
+Weight Added (mm^3),0.0
+Buoyancy Height (mm),107.95637253845909
+Out of water height,252.0
+Stability,-8.827743968441155
+Vehicle Weight (kg),321.20275420279694
+Net Force,651.5380261400005
+""
+Post Nodules
+Buoyancy Added (mm^3),68012514.69922923
+Weight Added (mm^3),0.0
+Buoyancy Height (mm),107.95637253845909
+Out of water height,298.0
+Stability,-98.50517284338002
+Vehicle Weight (kg),290.768634202797
+Net Force,950.0967433400006
+""
+""
+,+ Arm
+Pre launch checks
+Buoyancy Added (mm^3),51570238.9458704
+Weight Added (mm^3),0.0
+Buoyancy Height (mm),81.85752213630222
+Out of water height,287.0
+Stability,-34.026208841161406
+Vehicle Weight (kg),322.0197687858296
+Net Force,720.4073587399998
+""
+Launch
+Buoyancy Added (mm^3),51570238.9458704
+Weight Added (mm^3),0.0
+Buoyancy Height (mm),81.85752213630222
+Out of water height,243.0
+Stability,42.72723736395233
+Vehicle Weight (kg),352.45388878582963
+Net Force,421.8486415399998
+""
+Post Nodules
+Buoyancy Added (mm^3),51570238.9458704
+Weight Added (mm^3),0.0
+Buoyancy Height (mm),81.85752213630222
+Out of water height,287.0
+Stability,-34.026208841161406
+Vehicle Weight (kg),322.0197687858296
+Net Force,720.4073587399998
+""
+""
+,Final Vehicle
+Pre launch checks
+Buoyancy Added (mm^3),0.0
+Weight Added (mm^3),2358753.613502705
+Buoyancy Height (mm),0.0
+Out of water height,257.0
+Stability,48.78330996472914
+Vehicle Weight (kg),326.4632310706892
+Net Force,210.59164230500028
+""
+Launch
+Buoyancy Added (mm^3),0.0
+Weight Added (mm^3),2358753.613502705
+Buoyancy Height (mm),0.0
+Out of water height,-3850.0
+Stability,102.77525765301857
+Vehicle Weight (kg),356.8973510706892
+Net Force,-87.96707489499977
+""
+Post Nodules
+Buoyancy Added (mm^3),0.0
+Weight Added (mm^3),2358753.613502705
+Buoyancy Height (mm),0.0
+Out of water height,129.0
+Stability,90.48643715360504
+Vehicle Weight (kg),338.96318697384925
+Net Force,87.96707489500022
+""
 ""
