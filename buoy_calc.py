@@ -265,34 +265,6 @@ class Vehicle():
             return bouyancy_force
 
 
-
-class Vessel_Comparison():
-    """
-    A class for comparing two identical vehicles with 
-    a full vs empty buoyancy engine
-    """
-    def __init__(self, empty_vehicle, full_vehicle):
-        self.empty_vehicle = empty_vehicle
-        self.full_vehicle = full_vehicle
-    
-    def calc_foam_or_weight(self):
-        difference = self.full_vehicle.net_force - self.empty_vehicle.net_force
-
-        if difference > 0: # add weight
-            amount = difference / WEIGHT_IN_WATER_WEIGHT
-            self.empty_vehicle.add_vessel(Vessel(WEIGHT_DENSITY * abs(amount), amount, 1, 1, 2), 0)
-            self.full_vehicle.add_vessel(Vessel(WEIGHT_DENSITY * abs(amount), amount, 1, 1, 2), 0)
-        elif difference < 0: # add foam
-            amount = difference / FOAM_IN_WATER_BUOYANCY
-            self.empty_vehicle.add_vessel(Vessel(FOAM_DENSITY * abs(amount), amount,1, 1, 2), self.empty_vehicle.height)
-            self.full_vehicle.add_vessel(Vessel(FOAM_DENSITY * abs(amount), amount,1, 1, 2), self.full_vehicle.height)
-        else:
-            amount = 0
-        
-        self.empty_vehicle.recalc()
-        self.full_vehicle.recalc()
-        return amount, self.empty_vehicle.vessels[-1].weight # maybe just pass the vessel?
-
 def split_csv_row(row):
     return [
         row[0],
@@ -363,9 +335,10 @@ def output_data(location, vehicles):
             output.append(['Out of water height', vehicle.height - water])
             output.append(['Stability', COB - vehicle.COG])
             output.append(['Vehicle Weight (kg)', vehicle.weight / 9.81])
-            output.append(['Net Force', vehicle.net_force])
+            output.append(['Net Force', buoy - vehicle.weight])
+            output.append(["Righting Moment (lbf*ft)", buoy * (COB - vehicle.COG) * 0.738 / 1000])
             output.append([''])
-        else: # hopper and or buoyancy engine
+        else: # hopper and / or buoyancy engine
             vehicle.add_buoyancy(vehicle.calc_foam_for_varying())
             vehicle.recalc()
             water, buoy, COB = vehicle.calc_water_height()
@@ -386,7 +359,9 @@ def output_data(location, vehicles):
                 output.append(['Out of water height', vehicle.height - water])
                 output.append(['Stability', COB - vehicle.COG])
                 output.append(['Vehicle Weight (kg)', vehicle.weight / 9.81])
+                output.append(['Net Force', buoy - vehicle.weight])
                 output.append(['Net Force', vehicle.net_force])
+                output.append(["Righting Moment (lbf*ft)", buoy * (COB - vehicle.COG) * .738 / 1000])
                 output.append([''])
                 if i == 0:
                     output.append(['Launch'])

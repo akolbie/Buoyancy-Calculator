@@ -5,7 +5,8 @@ Buoyancy Height (mm),168.03598767840975
 Out of water height,26.0
 Stability,425.51928558134216
 Vehicle Weight (kg),404.05586324821917
-Net Force,10.0
+Net Force,0.05533087720914409
+Righting Moment (lbf*ft),1244.7785411443265
 ""
 ,Bare Bones + Buoyancy Engine
 Pre launch checks
@@ -15,7 +16,9 @@ Buoyancy Height (mm),107.95637253845909
 Out of water height,298.0
 Stability,-98.50517284338002
 Vehicle Weight (kg),290.768634202797
+Net Force,5.053764189035974
 Net Force,950.0967433400006
+Righting Moment (lbf*ft),-207.73072476978788
 ""
 Launch
 Buoyancy Added (mm^3),68012514.69922923
@@ -24,7 +27,9 @@ Buoyancy Height (mm),107.95637253845909
 Out of water height,252.0
 Stability,-8.827743968441155
 Vehicle Weight (kg),321.20275420279694
+Net Force,6.816741970145813
 Net Force,651.5380261400005
+Righting Moment (lbf*ft),-20.572775107803558
 ""
 Post Nodules
 Buoyancy Added (mm^3),68012514.69922923
@@ -33,7 +38,9 @@ Buoyancy Height (mm),107.95637253845909
 Out of water height,298.0
 Stability,-98.50517284338002
 Vehicle Weight (kg),290.768634202797
+Net Force,5.053764189035974
 Net Force,950.0967433400006
+Righting Moment (lbf*ft),-207.73072476978788
 ""
 ""
 ,+ Vision
@@ -44,7 +51,9 @@ Buoyancy Height (mm),107.95637253845909
 Out of water height,298.0
 Stability,-98.50517284338002
 Vehicle Weight (kg),290.768634202797
+Net Force,5.053764189035974
 Net Force,950.0967433400006
+Righting Moment (lbf*ft),-207.73072476978788
 ""
 Launch
 Buoyancy Added (mm^3),68012514.69922923
@@ -53,7 +62,9 @@ Buoyancy Height (mm),107.95637253845909
 Out of water height,252.0
 Stability,-8.827743968441155
 Vehicle Weight (kg),321.20275420279694
+Net Force,6.816741970145813
 Net Force,651.5380261400005
+Righting Moment (lbf*ft),-20.572775107803558
 ""
 Post Nodules
 Buoyancy Added (mm^3),68012514.69922923
@@ -62,7 +73,9 @@ Buoyancy Height (mm),107.95637253845909
 Out of water height,298.0
 Stability,-98.50517284338002
 Vehicle Weight (kg),290.768634202797
+Net Force,5.053764189035974
 Net Force,950.0967433400006
+Righting Moment (lbf*ft),-207.73072476978788
 ""
 ""
 ,+ Arm
@@ -73,7 +86,9 @@ Buoyancy Height (mm),81.85752213630222
 Out of water height,287.0
 Stability,-34.026208841161406
 Vehicle Weight (kg),322.0197687858296
+Net Force,1.1482809563599403
 Net Force,720.4073587399998
+Righting Moment (lbf*ft),-79.35591449404113
 ""
 Launch
 Buoyancy Added (mm^3),51570238.9458704
@@ -82,7 +97,9 @@ Buoyancy Height (mm),81.85752213630222
 Out of water height,243.0
 Stability,42.72723736395233
 Vehicle Weight (kg),352.45388878582963
+Net Force,1.2747404311717219
 Net Force,421.8486415399998
+Righting Moment (lbf*ft),109.06680113912023
 ""
 Post Nodules
 Buoyancy Added (mm^3),51570238.9458704
@@ -91,7 +108,9 @@ Buoyancy Height (mm),81.85752213630222
 Out of water height,287.0
 Stability,-34.026208841161406
 Vehicle Weight (kg),322.0197687858296
+Net Force,1.1482809563599403
 Net Force,720.4073587399998
+Righting Moment (lbf*ft),-79.35591449404113
 ""
 ""
 ,Final Vehicle
@@ -102,7 +121,9 @@ Buoyancy Height (mm),0.0
 Out of water height,257.0
 Stability,48.78330996472914
 Vehicle Weight (kg),326.4632310706892
+Net Force,0.6406390051383823
 Net Force,210.59164230500028
+Righting Moment (lbf*ft),115.32348926021686
 ""
 Launch
 Buoyancy Added (mm^3),0.0
@@ -111,7 +132,9 @@ Buoyancy Height (mm),0.0
 Out of water height,-3850.0
 Stability,102.77525765301857
 Vehicle Weight (kg),356.8973510706892
+Net Force,-88.34956216895353
 Net Force,-87.96707489499977
+Righting Moment (lbf*ft),258.8555529934767
 ""
 Post Nodules
 Buoyancy Added (mm^3),0.0
@@ -120,6 +143,8 @@ Buoyancy Height (mm),0.0
 Out of water height,129.0
 Stability,90.48643715360504
 Vehicle Weight (kg),338.96318697384925
+Net Force,0.9411460654009716
 Net Force,87.96707489500022
+Righting Moment (lbf*ft),222.1182759148104
 ""
 ""
